@@ -1,7 +1,7 @@
 *.class
 *.log
 
-# sbt specific
+#sbt specific
 .cache
 .history
 .lib/
@@ -13,7 +13,10 @@ src_managed/
 project/boot/
 project/plugins/project/
 
-# Scala-IDE specific
+#IDE specific
 .idea/
 rest.iml
 .DS_Store
+
+#app
+rdata
