@@ -4,15 +4,17 @@ Deploys elasticsearch cluster to local docker swarm.
 
 `./swarm-start.sh`
 
-Docker swarm Visualiser is accessible on `http://localhost:8000/`
+Docker swarm Visualiser is accessible on [http://localhost:8000/](http://localhost:8000/)
 
 ### Deploy elasticsearch service
 
 `./swarm-deploy.sh`
 
-The elasticsearch service will now be listening on `http://localhost:9200/`
+The elasticsearch service will now be listening on [http://localhost:9200/](http://localhost:9200/)
+A web front end for an elasticsearch cluster [elasticsearch-head](https://github.com/mobz/elasticsearch-head), is available on [http://localhost:9200/_plugin/head/](http://localhost:9200/_plugin/head/)
 
-### Add additional node to docker swam cluster (just to test service elasticity)
+
+### Add additional node to docker swam cluster (to test service elasticity)
 
 `./swarm-add-node.sh`
 

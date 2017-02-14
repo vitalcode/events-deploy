@@ -1,8 +1,9 @@
 version: "3"
 
 services:
+
   elasticsearch-master:
-    image: elasticsearch:1.7.6
+    image: ypereirareis/elasticsearch-head:1.7.5
     command:
       - -Des.http.cors.enabled=true
       - -Des.cluster.name=lisenok
@@ -23,7 +24,7 @@ services:
         constraints: [node.role == manager]
 
   elasticsearch-data:
-    image: elasticsearch:1.7.6
+    image: ypereirareis/elasticsearch-head:1.7.5
     command:
       - -Des.http.cors.enabled=true
       - -Des.cluster.name=lisenok
