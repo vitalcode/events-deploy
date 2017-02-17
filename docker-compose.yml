@@ -43,59 +43,69 @@ services:
       placement:
         constraints: [node.role == worker]
 
+  postgres:
+    image: postgres:9.6.1
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/pgdata
+    networks:
+      - events-network
+    ports:
+      - 5432:5432
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_USER=user
+      - POSTGRES_DB=events
+    deploy:
+      labels:
+        [uk.vitalcode.events.role=database]
+      placement:
+        constraints: [node.role == manager]
+
+  events-api:
+    image: vitalcode/events-api
+    environment:
+        - PSQL_URL=jdbc:postgresql://postgres:5432/events
+        - PSQL_USER=user
+        - PSQL_PASSWORD=development
+        - ES_URL=elasticsearch://elasticsearch-master:9300
+        - ES_INDEX=lisenok
+        - ES_TYPE=events
+        - ES_CLUSTER=robotic
+    depends_on:
+      - elasticsearch-master
+      - postgres
+    ports:
+      - 8083:8083
+    networks:
+      - elasticsearch-net
+      - events-network
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  graphiql:
+    image: vitalcode/auth-graphiql
+    ports:
+      - 3000:3000
+    depends_on:
+      - events-api
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
 networks:
   elasticsearch-net:
+  events-network:
 
+volumes:
+  postgres-data:
 
-
-#version: "3"
-#
-#services:
-
-#  db:
-#    image: postgres:9.6.1
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data/pgdata
-#    networks:
-#      - events-network
-#    ports:
-#      - 5400:5432
-#    environment:
-#      - PGDATA=/var/lib/postgresql/data/pgdata
-#      - POSTGRES_PASSWORD=development
-#      - POSTGRES_USER=user
-#      - POSTGRES_DB=events
-#    deploy:
-#      labels:
-#        [uk.vitalcode.events.role=database]
-#      placement:
-#        constraints: [node.role == manager]
-
-
-#  elasticsearch:
-#    image: vitalcode/events-elasticsearch
-##    volumes:
-# #     - ./elasticsearch/config:/usr/share/elasticsearch/config
-#    ports:
-#      - 9200:9200
-#      - 9300:9300
-##    command:
-##      - -Des.http.cors.enabled=true
-##      - -Des.index.number_of_shards=5
-##      - -Des.index.number_of_replicas=0
-#    networks:
-#      - events-network
-#    deploy:
-#      mode: replicated
-#      replicas: 3
-#      placement:
-#        constraints: [node.role == worker]
-
-
-  # the nginx image uses user de-escalation to change to the nginx user
 #  proxy:
 #    image: vitalcode/events-proxy
-#    restart: always
+#    #restart: always
 #    ports:
 #      - "8080:8080"
 #    links:
@@ -109,161 +119,3 @@ networks:
 #        constraints: [node.role == manager]
 
 
-#  graphiql:
-#    image: vitalcode/auth-graphiql
-#    links:
-#      - events-api
-#    ports:
-#      - "3000:3000"
-#    deploy:
-#      placement:
-#        constraints: [node.role == worker]
-#
-#  events-api:
-#    image: vitalcode/events-api
-#    environment:
-#        - PROJECT_NAME=events-api
-#        - PROJECT_VERSION=0.0.1
-#        - HOST_SERVER=robot@vps252914.ovh.net
-#        - PSQL_URL=jdbc:postgresql://db:5432/events
-#        - PSQL_USER=user
-#        - PSQL_PASSWORD=development
-#        - ES_URL=elasticsearch://elasticsearch:9300
-#        - ES_INDEX=lisenok
-#        - ES_TYPE=events
-#        - ES_CLUSTER=robotic
-#    links:
-#      - elasticsearch
-#      - db
-#    depends_on:
-#      - elasticsearch
-#      - db
-#    ports:
-#      - "8083:8083"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-  #        constraints: [node.role == worker]
-#
-
-#networks:
-#  events-network:
-#
-#volumes:
-#  pgdata:
-
-
-
-#version: "3"
-#
-#services:
-#
-#  # the nginx image uses user de-escalation to change to the nginx user
-#  proxy:
-#    image: vitalcode/events-proxy
-#    restart: always
-#    ports:
-#      - "8080:8080"
-#    links:
-#      - events-api
-#    labels:
-#      uk.vitalcode.events.role: "proxy"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == manager]
-#
-#
-#  graphiql:
-#    image: vitalcode/auth-graphiql
-#    links:
-#      - events-api
-#    ports:
-#      - "3000:3000"
-#    deploy:
-#      placement:
-#        constraints: [node.role == worker]
-#
-#  events-api:
-#    image: vitalcode/events-api
-#    environment:
-#        - PROJECT_NAME=events-api
-#        - PROJECT_VERSION=0.0.1
-#        - HOST_SERVER=robot@vps252914.ovh.net
-#        - PSQL_URL=jdbc:postgresql://db:5432/events
-#        - PSQL_USER=user
-#        - PSQL_PASSWORD=development
-#        - ES_URL=elasticsearch://elasticsearch:9300
-#        - ES_INDEX=lisenok
-#        - ES_TYPE=events
-#        - ES_CLUSTER=robotic
-#    links:
-#      - elasticsearch:esnode
-#      - db:db
-#    ports:
-#      - "8083:8083"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == worker]
-#
-#  # The elasticsearch image declares a volume at /usr/share/elasticsearch/data
-#  # for that reason we need not declare a volume here unless we want to
-#  # bind-mount that volume to a specific location on the disk.
-#  # Doing so may be useful for integration with volume management tools
-#  elasticsearch:
-#    image: elasticsearch:1.7.6
-#    ports:
-#      - "9200:9200"
-#    environment:
-#      - transport.host=0.0.0.0
-#      - discovery.zen.minimum_master_nodes=1
-#    command:
-#      - -Des.http.cors.enabled=true
-#      - -Des.node.name="TestNode"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == worker]
-#
-#  db:
-#    image: postgres:9.6.1
-#    volumes:
-#      - pgdata
-#    environment:
-#      - PGDATA=/var/lib/postgresql/data/pgdata
-#      - POSTGRES_PASSWORD=development
-#      - POSTGRES_USER=user
-#      - POSTGRES_DB=events
-#    labels:
-#      com.dockerinaction.chapter: "12"
-#      com.dockerinaction.example: "Coffee API"
-#      com.dockerinaction.role: "Database"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == manager]
-#
-#
-#  dbstate:
-#    image: gliderlabs/alpine
-#    command: echo Data Container
-#    user: 999:999
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data/pgdata
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == manager]
-#
-#networks:
-#  events-network:
-#
-#volumes:
-#  pgdata:
