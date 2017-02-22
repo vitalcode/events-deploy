@@ -1,5 +1,11 @@
 Deploys elasticsearch cluster to local docker swarm.
 
+### Set enviromental varibles:
+
+EVENTS_APP_USER         - admin user name
+EVENTS_APP_PASSWORD     - admin user password
+
+
 ### Run docker swarm, using docker-in-docker approch
 
 `./swarm-start.sh`

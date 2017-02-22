@@ -11,7 +11,7 @@ echo "===== for [${DIGITAL_OCEAN_REGION}] region"
 [ -z ${SWARM_MEMORY_MASTER} ] && SWARM_MEMORY_MASTER=2gb
 echo "===== with [${SWARM_NUM_MASTER}] [${SWARM_MEMORY_MASTER}] master nodes"
 
-[ -z ${SWARM_NUM_WORKER} ] && SWARM_NUM_WORKER=2
+[ -z ${SWARM_NUM_WORKER} ] && SWARM_NUM_WORKER=1
 [ -z ${SWARM_MEMORY_WORKER} ] && SWARM_MEMORY_WORKER=2gb
 echo "===== with [${SWARM_NUM_WORKER}] [${SWARM_MEMORY_WORKER}] worker nodes"
 
@@ -19,12 +19,14 @@ echo "===== with [${SWARM_NUM_WORKER}] [${SWARM_MEMORY_WORKER}] worker nodes"
 MASTER_OPTIONS="--driver digitalocean 
                 --digitalocean-access-token=${DIGITAL_OCEAN_TOKEN} 
                 --digitalocean-region=${DIGITAL_OCEAN_REGION} 
-                --digitalocean-size=${SWARM_MEMORY_MASTER}"
+                --digitalocean-size=${SWARM_MEMORY_MASTER}
+                --swarm-experimental"
                 
 WORKER_OPTIONS="--driver digitalocean 
                 --digitalocean-access-token=${DIGITAL_OCEAN_TOKEN} 
                 --digitalocean-region=${DIGITAL_OCEAN_REGION} 
-                --digitalocean-size=${SWARM_MEMORY_WORKER}"
+                --digitalocean-size=${SWARM_MEMORY_WORKER}
+                --swarm-experimental"
 
 # Create master node
 docker-machine create ${MASTER_OPTIONS} master-1

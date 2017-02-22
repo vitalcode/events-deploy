@@ -2,21 +2,22 @@ version: "3"
 
 services:
 
-  elasticsearch-master:
+  elasticsearch:
     image: ypereirareis/elasticsearch-head:1.7.5
     command:
       - -Des.http.cors.enabled=true
-      - -Des.cluster.name=lisenok
+      - -Des.cluster.name=robotic
       - -Des.index.number_of_shards=5
       - -Des.index.number_of_replicas=0
-      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch-master
+      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch
       - -Des.node.master=true
       - -Des.node.data=true
       - -Des.iscovery.zen.minimum_master_nodes=1
       - -Des.discovery.zen.ping.multicast.enabled=false
-      - -Des.network.publish_host=elasticsearch-master
+      - -Des.network.publish_host=elasticsearch
     ports:
       - 9200:9200
+      - 9300:9300
     networks:
       - elasticsearch-net
     deploy:
@@ -27,10 +28,10 @@ services:
     image: ypereirareis/elasticsearch-head:1.7.5
     command:
       - -Des.http.cors.enabled=true
-      - -Des.cluster.name=lisenok
-      - -Des.index.number_of_shards=
+      - -Des.cluster.name=robotic
+      - -Des.index.number_of_shards=5
       - -Des.index.number_of_replicas=0
-      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch-master
+      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch
       - -Des.node.master=false
       - -Des.node.data=true
       - -Des.iscovery.zen.minimum_master_nodes=1
@@ -44,11 +45,11 @@ services:
         constraints: [node.role == worker]
 
   postgres:
-    image: postgres:9.6.1
+    image: vitalcode/events-postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data/pgdata
     networks:
-      - events-network
+      - elasticsearch-net
     ports:
       - 5432:5432
     environment:
@@ -56,6 +57,8 @@ services:
       - POSTGRES_PASSWORD=development
       - POSTGRES_USER=user
       - POSTGRES_DB=events
+      - EVENTS_APP_USER=${EVENTS_APP_USER}
+      - EVENTS_APP_PASSWORD=${EVENTS_APP_PASSWORD}
     deploy:
       labels:
         [uk.vitalcode.events.role=database]
@@ -65,21 +68,20 @@ services:
   events-api:
     image: vitalcode/events-api
     environment:
-        - PSQL_URL=jdbc:postgresql://postgres:5432/events
-        - PSQL_USER=user
-        - PSQL_PASSWORD=development
-        - ES_URL=elasticsearch://elasticsearch-master:9300
-        - ES_INDEX=lisenok
-        - ES_TYPE=events
-        - ES_CLUSTER=robotic
+      - PSQL_URL=jdbc:postgresql://postgres/events
+      - PSQL_USER=user
+      - PSQL_PASSWORD=development
+      - ES_URL=elasticsearch://elasticsearch:9300
+      - ES_INDEX=lisenok
+      - ES_TYPE=events
+      - ES_CLUSTER=robotic
     depends_on:
-      - elasticsearch-master
+      - elasticsearch
       - postgres
     ports:
       - 8083:8083
     networks:
       - elasticsearch-net
-      - events-network
     deploy:
       mode: global
       placement:
@@ -98,7 +100,6 @@ services:
 
 networks:
   elasticsearch-net:
-  events-network:
 
 volumes:
   postgres-data:
