@@ -15,9 +15,6 @@ services:
       - -Des.iscovery.zen.minimum_master_nodes=1
       - -Des.discovery.zen.ping.multicast.enabled=false
       - -Des.network.publish_host=elasticsearch
-    ports:
-      - 9200:9200
-      - 9300:9300
     networks:
       - elasticsearch-net
     deploy:
@@ -50,8 +47,6 @@ services:
       - postgres-data:/var/lib/postgresql/data/pgdata
     networks:
       - elasticsearch-net
-    ports:
-      - 5432:5432
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
       - POSTGRES_PASSWORD=development
@@ -77,9 +72,8 @@ services:
       - ES_CLUSTER=robotic
     depends_on:
       - elasticsearch
+      - elasticsearch-data
       - postgres
-    ports:
-      - 8083:8083
     networks:
       - elasticsearch-net
     deploy:
@@ -89,10 +83,10 @@ services:
 
   graphiql:
     image: vitalcode/auth-graphiql
-    ports:
-      - 3000:3000
     depends_on:
       - events-api
+    networks:
+      - elasticsearch-net
     deploy:
       mode: global
       placement:
@@ -103,20 +97,3 @@ networks:
 
 volumes:
   postgres-data:
-
-#  proxy:
-#    image: vitalcode/events-proxy
-#    #restart: always
-#    ports:
-#      - "8080:8080"
-#    links:
-#      - events-api
-#    labels:
-#      uk.vitalcode.events.role: "proxy"
-#    networks:
-#      - events-network
-#    deploy:
-#      placement:
-#        constraints: [node.role == manager]
-
-
