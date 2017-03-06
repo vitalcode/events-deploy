@@ -4,7 +4,8 @@ services:
 
   visualizer:
     image: manomarks/visualizer:latest
-    volumes: /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - HOST=localhost
     deploy:
