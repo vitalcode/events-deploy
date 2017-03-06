@@ -8,6 +8,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - HOST=localhost
+    networks:
+      - events-network
     deploy:
       placement:
         constraints: [node.role == manager]
