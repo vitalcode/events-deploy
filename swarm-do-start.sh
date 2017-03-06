@@ -43,16 +43,6 @@ docker swarm init --listen-addr=${SWARM_MASTER_IP}:2733 --advertise-addr=${SWARM
 SWARM_TOKEN_WORKER=$(docker swarm join-token -q worker)
 echo "===== Swarm worker join token: [${SWARM_TOKEN_WORKER}]"
 
-# Run swarm visualizer on master node
-eval $(docker-machine env master-1)
-echo "===== Run Local Swarm Visualizer"
-docker rm --force swarm_visualizer > /dev/null 2>&1
-docker run -it -d --name swarm_visualizer \
-  -p 8000:8080 -e HOST=localhost \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  manomarks/visualizer:beta
-
-
 # Create workers node and join the swarm
 for i in $(seq "${SWARM_NUM_WORKER}"); do
   docker-machine create ${WORKER_OPTIONS} worker-${i}
