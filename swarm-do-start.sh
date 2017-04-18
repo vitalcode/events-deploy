@@ -20,12 +20,14 @@ MASTER_OPTIONS="--driver digitalocean
                 --digitalocean-access-token=${DIGITAL_OCEAN_TOKEN} 
                 --digitalocean-region=${DIGITAL_OCEAN_REGION} 
                 --digitalocean-size=${SWARM_MEMORY_MASTER}
+                --engine-opt experimental=true
                 --swarm-experimental"
                 
 WORKER_OPTIONS="--driver digitalocean 
                 --digitalocean-access-token=${DIGITAL_OCEAN_TOKEN} 
                 --digitalocean-region=${DIGITAL_OCEAN_REGION} 
                 --digitalocean-size=${SWARM_MEMORY_WORKER}
+                --engine-opt experimental=true
                 --swarm-experimental"
 
 # Create master node
