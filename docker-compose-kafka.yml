@@ -27,13 +27,18 @@ services:
         constraints: [node.role == manager]
 
   kafka:
+    depends_on:
+      - zk
     image: vitalcode/events-kafka
     environment:
       - KAFKA_ZOOKEEPER_CONNECT=zk:2181
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://$${HOSTNAME}:9092
       - KAFKA_DELETE_TOPIC_ENABLE=true
+      - "KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$$(dig +short myip.opendns.com @resolver1.opendns.com) -Dcom.sun.management.jmxremote.rmi.port=1099 "
+      - JMX_PORT=1099
     ports:
       - 9092:9092
+      - 1099:1099
     networks:
       - events-network
     deploy:
@@ -41,3 +46,4 @@ services:
 
 networks:
   events-network:
+
