@@ -16,6 +16,64 @@ services:
       placement:
         constraints: [node.role == manager]
 
+  logspout:
+    depends_on:
+      - kafka
+    image: vitalcode/events-logspout-logstash
+    ports:
+      - 8000:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - events-network
+    command: syslog://logstash:5000
+    deploy:
+      placement:
+        constraints: [node.role == worker]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.3.1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - events-network
+    environment:
+      - cluster.name=elastic-log
+      - http.cors.enabled=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    deploy:
+      placement:
+        constraints: [node.role == worker]
+
+  logstash:
+    depends_on:
+      - logspout
+      - elasticsearch
+    image: vitalcode/events-logstash
+    environment:
+      LOGSPOUT: ignore
+    networks:
+      - events-network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  kibana:
+    depends_on:
+      - logspout
+      - elasticsearch
+    image: docker.elastic.co/kibana/kibana:5.3.1
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - events-network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
   zk:
     image: vitalcode/events-zookeeper
     ports:
@@ -42,7 +100,8 @@ services:
     networks:
       - events-network
     deploy:
-      mode: global
+      placement:
+        constraints: [node.role == worker]
 
 networks:
   events-network:

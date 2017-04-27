@@ -8,7 +8,7 @@ echo "===== Building swarm: "
 echo "===== for [${DIGITAL_OCEAN_REGION}] region"
 
 [ -z ${SWARM_NUM_MASTER} ] && SWARM_NUM_MASTER=1
-[ -z ${SWARM_MEMORY_MASTER} ] && SWARM_MEMORY_MASTER=2gb
+[ -z ${SWARM_MEMORY_MASTER} ] && SWARM_MEMORY_MASTER=4gb
 echo "===== with [${SWARM_NUM_MASTER}] [${SWARM_MEMORY_MASTER}] master nodes"
 
 [ -z ${SWARM_NUM_WORKER} ] && SWARM_NUM_WORKER=1
@@ -32,6 +32,7 @@ WORKER_OPTIONS="--driver digitalocean
 
 # Create master node
 docker-machine create ${MASTER_OPTIONS} master-1
+docker-machine ssh master-1 sysctl -w vm.max_map_count=262144
 eval $(docker-machine env master-1)
 
 # get swarm master ip
@@ -48,6 +49,7 @@ echo "===== Swarm worker join token: [${SWARM_TOKEN_WORKER}]"
 # Create workers node and join the swarm
 for i in $(seq "${SWARM_NUM_WORKER}"); do
   docker-machine create ${WORKER_OPTIONS} worker-${i}
+  docker-machine ssh worker-${i} sysctl -w vm.max_map_count=262144
   eval $(docker-machine env worker-${i})
   docker swarm join --token ${SWARM_TOKEN_WORKER} ${SWARM_MASTER_IP}:2733
 done
