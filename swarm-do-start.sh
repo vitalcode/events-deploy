@@ -12,7 +12,7 @@ echo "===== for [${DIGITAL_OCEAN_REGION}] region"
 echo "===== with [${SWARM_NUM_MASTER}] [${SWARM_MEMORY_MASTER}] master nodes"
 
 [ -z ${SWARM_NUM_WORKER} ] && SWARM_NUM_WORKER=1
-[ -z ${SWARM_MEMORY_WORKER} ] && SWARM_MEMORY_WORKER=2gb
+[ -z ${SWARM_MEMORY_WORKER} ] && SWARM_MEMORY_WORKER=4gb
 echo "===== with [${SWARM_NUM_WORKER}] [${SWARM_MEMORY_WORKER}] worker nodes"
 
 # Set docker-machine options

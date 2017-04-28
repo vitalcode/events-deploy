@@ -10,6 +10,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - HOST=localhost
+      - LOGSPOUT=ignore
     networks:
       - events-network
     deploy:
@@ -19,11 +20,15 @@ services:
   logspout:
     depends_on:
       - kafka
+      - zk
+      - logstash
     image: vitalcode/events-logspout-logstash
     ports:
       - 8000:80
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - LOGSPOUT=ignore
     networks:
       - events-network
     command: syslog://logstash:5000
@@ -42,17 +47,17 @@ services:
       - cluster.name=elastic-log
       - http.cors.enabled=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - LOGSPOUT=ignore
     deploy:
       placement:
         constraints: [node.role == worker]
 
   logstash:
     depends_on:
-      - logspout
       - elasticsearch
     image: vitalcode/events-logstash
     environment:
-      LOGSPOUT: ignore
+      - LOGSPOUT=ignore
     networks:
       - events-network
     deploy:
@@ -61,13 +66,13 @@ services:
 
   kibana:
     depends_on:
-      - logspout
       - elasticsearch
     image: docker.elastic.co/kibana/kibana:5.3.1
     ports:
       - 5601:5601
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - LOGSPOUT=ignore
     networks:
       - events-network
     deploy:
