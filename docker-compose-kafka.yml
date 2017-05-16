@@ -112,6 +112,7 @@ services:
     image: vitalcode/akka-cluster-docker
     networks:
       - events-network
+    hostname: akka-seed
     environment:
       - "JAVA_OPTS=-Dclustering.port=2551 -Dbind.clustering.port=2551"
     command:
@@ -129,7 +130,7 @@ services:
     environment:
       - "JAVA_OPTS=-Dclustering.port=2551 -Dbind.clustering.port=2551"
     command:
-      - 7327b643f3ef:2551
+      - akka-seed:2551
     deploy:
       placement:
         constraints: [node.role == worker]
