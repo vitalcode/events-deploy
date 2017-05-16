@@ -108,6 +108,33 @@ services:
       placement:
         constraints: [node.role == worker]
 
+  akka-seed:
+    image: vitalcode/akka-cluster-docker
+    networks:
+      - events-network
+    environment:
+      - "JAVA_OPTS=-Dclustering.port=2551 -Dbind.clustering.port=2551"
+    command:
+      - --seed
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  akka-node:
+    depends_on:
+      - akka-seed
+    image: vitalcode/akka-cluster-docker
+    networks:
+      - events-network
+    environment:
+      - "JAVA_OPTS=-Dclustering.port=2551 -Dbind.clustering.port=2551"
+    command:
+      - 7327b643f3ef:2551
+    deploy:
+      placement:
+        constraints: [node.role == worker]
+
 networks:
   events-network:
+
 
