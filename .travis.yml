@@ -1,0 +1,9 @@
+language: generic
+sudo: false
+branches:
+  only:
+    - master
+notifications:
+  email:
+    - vitaliy.kuznetsov@yahoo.co.uk
+script: ./deploy-books.sh

@@ -1,0 +1,138 @@
+version: '3'
+
+services:
+
+  api:
+    image: vitalcode/books-api
+    networks:
+      - events-network
+    ports: # remove
+      - 8083:8083
+    environment:
+      - PSQL_HOST=postgres
+      - PSQL_PORT=5432
+      - PSQL_NAME=events
+      - PSQL_USER=user
+      - PSQL_PASSWORD=development
+      - ES_URL=elasticsearch://elasticsearch:9300
+      - ES_INDEX=lisenok
+      - ES_TYPE=events
+      - ES_CLUSTER=robotic
+    entrypoint: dockerize -wait tcp://postgres:5432 -wait http://elasticsearch:9200 -timeout 360s bin/books-api
+    depends_on:
+      - postgres
+      - elasticsearch
+      - elasticsearch-data
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  web: # use dockerize -wait
+    image: vitalcode/books-web
+    networks:
+      - events-network
+    ports:
+      - 8000:80
+    depends_on:
+      - api
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  elasticsearch:
+    image: ypereirareis/elasticsearch-head:1.7.5
+    networks:
+      - events-network
+    ports: # remove
+      - 9300:9300
+      - 9200:9200
+    command:
+      - -Des.http.cors.enabled=true
+      - -Des.cluster.name=robotic
+      - -Des.index.number_of_shards=5
+      - -Des.index.number_of_replicas=0
+      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch
+      - -Des.node.master=true
+      - -Des.node.data=true
+      - -Des.iscovery.zen.minimum_master_nodes=1
+      - -Des.discovery.zen.ping.multicast.enabled=false
+      - -Des.network.publish_host=elasticsearch
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  elasticsearch-data:
+    image: ypereirareis/elasticsearch-head:1.7.5
+    command:
+      - -Des.http.cors.enabled=true
+      - -Des.cluster.name=robotic
+      - -Des.index.number_of_shards=5
+      - -Des.index.number_of_replicas=0
+      - -Des.discovery.zen.ping.unicast.hosts=elasticsearch
+      - -Des.node.master=false
+      - -Des.node.data=true
+      - -Des.iscovery.zen.minimum_master_nodes=1
+      - -Des.discovery.zen.ping.multicast.enabled=false
+      - -Des.network.publish_host=$${HOSTNAME}
+    networks:
+      - events-network
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  postgres:
+    image: vitalcode/events-postgres
+    ports: # remove
+      - 5400:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/pgdata
+    networks:
+      - events-network
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_USER=user
+      - POSTGRES_DB=events
+      - EVENTS_APP_USER=${EVENTS_APP_USER}
+      - EVENTS_APP_PASSWORD=${EVENTS_APP_PASSWORD}
+    deploy:
+      labels:
+        [uk.vitalcode.events.role=database]
+      placement:
+        constraints: [node.role == manager]
+
+  graphiql:
+    image: vitalcode/auth-graphiql
+    ports: # remove
+      - 3083:3000
+    networks:
+      - events-network
+    depends_on:
+      - api
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  visualizer:
+    image: manomarks/visualizer:latest
+    ports: # remove
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - HOST=localhost
+    networks:
+      - events-network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+networks:
+  events-network:
+
+volumes:
+  postgres-data:
