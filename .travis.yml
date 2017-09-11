@@ -1,5 +1,7 @@
 language: generic
-sudo: false
+sudo: required
+services:
+  - docker
 branches:
   only:
   - master
