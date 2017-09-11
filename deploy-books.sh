@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 ./swarm-do-start
 ./swarm-do-books-deploy.sh
