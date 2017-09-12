@@ -15,6 +15,9 @@ echo "===== with [${SWARM_NUM_MASTER}] [${SWARM_MEMORY_MASTER}] master nodes"
 [ -z ${SWARM_MEMORY_WORKER} ] && SWARM_MEMORY_WORKER=4gb
 echo "===== with [${SWARM_NUM_WORKER}] [${SWARM_MEMORY_WORKER}] worker nodes"
 
+# Unique prefix
+PREFIX=$(uuidgen | cut -c 1-6)
+
 # Set docker-machine options
 MASTER_OPTIONS="--driver digitalocean 
                 --digitalocean-access-token=${DIGITAL_OCEAN_TOKEN} 
@@ -31,12 +34,13 @@ WORKER_OPTIONS="--driver digitalocean
                 --swarm-experimental"
 
 # Create master node
-docker-machine create ${MASTER_OPTIONS} master-1
-docker-machine ssh master-1 sysctl -w vm.max_map_count=262144
-eval $(docker-machine env master-1)
+MASTER_NODE=${PREFIX}-master-1
+docker-machine create ${MASTER_OPTIONS} ${MASTER_NODE}
+docker-machine ssh ${MASTER_NODE} sysctl -w vm.max_map_count=262144
+eval $(docker-machine env ${MASTER_NODE})
 
 # get swarm master ip
-SWARM_MASTER_IP=$(docker-machine ip master-1)
+SWARM_MASTER_IP=$(docker-machine ip ${MASTER_NODE})
 echo "===== Swarm master IP: [${SWARM_MASTER_IP}]"
 
 # initialise swarm
@@ -48,14 +52,15 @@ echo "===== Swarm worker join token: [${SWARM_TOKEN_WORKER}]"
 
 # Create workers node and join the swarm
 for i in $(seq "${SWARM_NUM_WORKER}"); do
-  docker-machine create ${WORKER_OPTIONS} worker-${i}
-  docker-machine ssh worker-${i} sysctl -w vm.max_map_count=262144
-  eval $(docker-machine env worker-${i})
+  WORKER_NODE=${PREFIX}-worker-${i}
+  docker-machine create ${WORKER_OPTIONS} ${WORKER_NODE}
+  docker-machine ssh ${WORKER_NODE} sysctl -w vm.max_map_count=262144
+  eval $(docker-machine env ${WORKER_NODE})
   docker swarm join --token ${SWARM_TOKEN_WORKER} ${SWARM_MASTER_IP}:2733
 done
 
 # Show swarm cluster
-eval $(docker-machine env master-1)
+eval $(docker-machine env ${MASTER_NODE})
 echo "===== Local Swarm Cluster"
 docker node ls
 
