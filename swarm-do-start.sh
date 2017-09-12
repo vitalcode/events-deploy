@@ -16,7 +16,7 @@ echo "===== with [${SWARM_NUM_MASTER}] [${SWARM_MEMORY_MASTER}] master nodes"
 echo "===== with [${SWARM_NUM_WORKER}] [${SWARM_MEMORY_WORKER}] worker nodes"
 
 # Unique prefix
-PREFIX=$(uuidgen | cut -c 1-6)
+PREFIX=$1
 
 # Set docker-machine options
 MASTER_OPTIONS="--driver digitalocean 
